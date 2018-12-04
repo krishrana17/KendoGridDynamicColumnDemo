@@ -1,0 +1,96 @@
+﻿@model KendoGridDynamicColumn.Models.MedicationHistoryViewModel
+@{
+    ViewBag.Title = "All Rows - Limited Columns";
+}
+<link rel="stylesheet" href="http://cdn.kendostatic.com/2014.3.1316/styles/kendo.common.min.css" />
+<link rel="stylesheet" href="http://cdn.kendostatic.com/2014.3.1316/styles/kendo.default.min.css" />
+<script src="~/Scripts/jquery-1.12.3.min.js"></script>
+<script src="~/Scripts/kendo.all.min.js"></script>
+<script src="~/Scripts/kendo.aspnetmvc.min.js"></script>
+
+<div class="jumbotron">
+    <h2>Kendo Grid</h2>
+    <h4>All Rows - Limited Columns</h4>
+</div>
+
+<div class="row">
+    <div class="dropdown keep-open">
+        <!-- Dropdown Button -->
+        <button id="dLabel" role="button" href="#"
+                data-toggle="dropdown" data-target="#"
+                class="btn btn-primary">
+            Select Column <span class="caret"></span>
+        </button>
+
+        <!-- Dropdown Menu -->
+        <ul class="dropdown-menu" role="menu"
+            aria-labelledby="dLabel">
+            @foreach (var item in Model.Columns)
+            {
+                <li>
+                    <input data-val="true" id="@item.FieldName" name="@item.FieldName" type="checkbox" value="true" checked="@item.IsVisible" />
+                    @item.Title
+                </li>
+            }
+            <li class="buttonContainer">
+                <button id="btnOK" role="button"
+                        class="btn btn-primary">
+                    OK
+                </button>
+                <button id="btnCancel" role="button"
+                        class="btn btn-default" data-dissmiss="toggle">
+                    Cancel
+                </button>
+            </li>
+        </ul>
+
+    </div>
+</div>
+
+<div class="row" id="dvGrid">
+</div>
+<script>
+    $(document).ready(function () {
+
+        BindMedicationRecords();
+        
+        $('.keep-open').on({
+            "shown.bs.dropdown": function () { $(this).attr('closable', false); },
+            "click": function () { },
+            "hide.bs.dropdown": function () { return $(this).attr('closable') == 'true'; }
+        });
+
+        $('#dLabel').on("click", function () {
+            $(this).parent().attr('closable', true);
+        });
+
+        $('#btnOK').on("click", function () {
+            BindMedicationRecords();
+            $('#btnCancel').click();
+        });
+
+        $('#btnCancel').on("click", function () {
+            $(this).parent().parent().parent().attr('closable', true);
+        });
+    });
+
+    function BindMedicationRecords()
+    {
+        //var columnNames = "physicianid, medication, processid, createdt";
+        var columnNames = $('.dropdown-menu input:checkbox:checked').map(function ()
+        {
+            return this.id
+        }).get().join(', ');
+
+        $.ajax({
+            url: '@Url.Content("~")' + 'Home/GetMedicationView',
+            type: 'GET',
+            data: {columnNames: columnNames},
+            cache: false
+        }).done(function (result) {
+            $('#dvGrid').empty();
+            $('#dvGrid').html(result);
+        });
+    }
+
+</script>

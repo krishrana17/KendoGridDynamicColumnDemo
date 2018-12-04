@@ -1,0 +1,121 @@
+﻿@model KendoGridDynamicColumn.Models.GridViewModel
+@{
+    ViewBag.Title = "Home Page";
+}
+<link rel="stylesheet" href="http://cdn.kendostatic.com/2014.3.1316/styles/kendo.common.min.css" />
+<link rel="stylesheet" href="http://cdn.kendostatic.com/2014.3.1316/styles/kendo.default.min.css" />
+<script src="~/Scripts/jquery-1.12.3.min.js"></script>
+<script src="~/Scripts/kendo.all.min.js"></script>
+<script src="~/Scripts/kendo.aspnetmvc.min.js"></script>
+
+<div class="jumbotron">
+    <h2>Dynamic Kendo Grid</h2>
+    <h4>POC - V.1.0.0</h4>
+</div>
+
+<div class="row">
+    <div class="dropdown keep-open">
+        <!-- Dropdown Button -->
+        <button id="dLabel" role="button" href="#"
+                data-toggle="dropdown" data-target="#"
+                class="btn btn-primary">
+            Select Column <span class="caret"></span>
+        </button>
+
+        <!-- Dropdown Menu -->
+        <ul class="dropdown-menu" role="menu"
+            aria-labelledby="dLabel">
+            @foreach (var item in Model.Columns)
+            {
+                <li>
+                    <input data-val="true" id="@item.FieldName" name="@item.FieldName" type="checkbox" value="true" checked="@item.Display" onchange="gvchange(this);" />
+                    @item.Caption
+                </li>
+            }
+            <li class="buttonContainer">
+                <button id="btnOK" role="button"
+                        class="btn btn-primary">
+                    OK
+                </button>
+                <button id="btnCancel" role="button"
+                        class="btn btn-default" data-dissmiss="toggle">
+                    Cancel
+                </button>
+            </li>
+        </ul>
+        
+    </div>
+</div>
+
+<div class="row">
+    <div class="kendolist">
+        @(Html.Kendo().Grid(Model.RowValues)
+            .Name("grdDynamicCol")
+            .Columns(columns =>
+            {
+                foreach (var column in Model.Columns)
+                {
+                    columns.Bound(column.FieldName).Title(column.Caption)
+                        //.Visible(column.Display)
+                        .Format(column.Format)
+                        .Width($"{column.Width}%")
+                        .HtmlAttributes(new { @style = $"text-align:{column.Align.ToLower()}" })
+                        .HeaderHtmlAttributes(new { @style = $"text-align:{column.Align.ToLower()}" });
+                }
+            })
+            .Pageable()
+            .Sortable()
+            .Resizable(resize => resize.Columns(true))
+            .DataSource(dataSource => dataSource
+                .Ajax()
+                .Model(model =>
+                {
+                    foreach (var column in Model.Columns)
+                    {
+                        model.Field(column.FieldName, column.DataType);
+                    }
+                })
+            )
+        //.ColumnMenu()
+        //.HtmlAttributes(new { @class = "gridview" })
+        )
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+
+        HideGridColumn();
+
+        $('.keep-open').on({
+            "shown.bs.dropdown": function () { $(this).attr('closable', false); },
+            "click": function () { },
+            "hide.bs.dropdown": function () { return $(this).attr('closable') == 'true'; }
+        });
+
+        $('#dLabel').on("click", function () {
+            $(this).parent().attr('closable', true);
+        });
+
+        $('#btnCancel').on("click", function () {
+            $(this).parent().parent().parent().attr('closable', true);
+        });
+
+    });
+
+    function HideGridColumn() {
+        var grid = $("#grdDynamicCol").data("kendoGrid");
+        @foreach (var column in Model.Columns.Where(col => col.Display == false))
+        {
+            <text>grid.hideColumn('@column.FieldName');</text>
+        }
+    }
+
+    function gvchange(e) {
+        var grid = $("#grdDynamicCol").data("kendoGrid");
+        if (e.checked) {
+            grid.showColumn(e.id);
+        } else {
+            grid.hideColumn(e.id);
+        }
+    }
+</script>
